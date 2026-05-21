@@ -1,0 +1,47 @@
+{
+    "name": "@plurnk/plurnk-mimetypes-application-toml",
+    "version": "0.1.0",
+    "description": "application/toml and text/toml mimetype handler for plurnk-service.",
+    "type": "module",
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
+    "engines": {
+        "node": ">=25"
+    },
+    "plurnk": {
+        "kind": "mimetype",
+        "handlers": [
+            { "name": "application/toml", "glyph": "⚙️", "extensions": [".toml"] },
+            { "name": "text/toml", "glyph": "⚙️", "extensions": [] }
+        ]
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "dist/**/*",
+        "README.md"
+    ],
+    "scripts": {
+        "test:lint": "tsc --noEmit",
+        "test:unit": "node --test src/**/*.test.ts",
+        "test": "npm run test:lint && npm run test:unit",
+        "build:dist": "tsc -p tsconfig.build.json",
+        "build": "npm run build:dist",
+        "prepare": "npm run build"
+    },
+    "dependencies": {
+        "@plurnk/plurnk-mimetypes": "^0.2.1",
+        "smol-toml": "^1.3.1"
+    },
+    "devDependencies": {
+        "@types/node": "^25.8.0",
+        "typescript": "^6.0.3"
+    }
+}
