@@ -13,11 +13,11 @@ import { parse } from "smol-toml";
 // emitted as their containing-key symbols only — inline keys are not surfaced
 // since the structural signal is the parent.
 export default class ApplicationToml extends BaseHandler {
-    validate(content: string): void {
+    override validate(content: string): void {
         parse(content);
     }
 
-    extract(content: string): MimeSymbol[] {
+    override extractRaw(content: string): MimeSymbol[] {
         let parsed: Record<string, unknown>;
         try {
             parsed = parse(content) as Record<string, unknown>;

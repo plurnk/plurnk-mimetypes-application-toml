@@ -29,7 +29,7 @@ describe("ApplicationToml", () => {
     });
 
     it("extracts top-level assignment keys", () => {
-        const result = h.extract('name = "plurnk"\nversion = "0.1.0"');
+        const result = h.extractRaw('name = "plurnk"\nversion = "0.1.0"');
         const names = result.map((s) => s.name);
         assert.ok(names.includes("name"));
         assert.ok(names.includes("version"));
@@ -43,7 +43,7 @@ describe("ApplicationToml", () => {
             "[database]",
             "host = \"localhost\"",
         ].join("\n");
-        const result = h.extract(src);
+        const result = h.extractRaw(src);
         const names = result.map((s) => s.name);
         assert.ok(names.includes("server"));
         assert.ok(names.includes("port"));
@@ -56,7 +56,7 @@ describe("ApplicationToml", () => {
             "[servers.production]",
             'host = "prod.example.com"',
         ].join("\n");
-        const result = h.extract(src);
+        const result = h.extractRaw(src);
         const names = result.map((s) => s.name);
         assert.ok(names.includes("servers"));
         assert.ok(names.includes("production"));
@@ -70,7 +70,7 @@ describe("ApplicationToml", () => {
             "[[users]]",
             'name = "bob"',
         ].join("\n");
-        const result = h.extract(src);
+        const result = h.extractRaw(src);
         const names = result.map((s) => s.name);
         assert.ok(names.includes("users"));
         assert.equal(names.filter((n) => n === "name").length, 2);
@@ -83,17 +83,17 @@ describe("ApplicationToml", () => {
             "",
             'second = "b"',
         ].join("\n");
-        const result = h.extract(src);
+        const result = h.extractRaw(src);
         const byName = new Map(result.map((s) => [s.name, s.line]));
         assert.equal(byName.get("first"), 2);
         assert.equal(byName.get("second"), 4);
     });
 
     it("extract is non-throwing on malformed TOML (validate is the throwing path)", () => {
-        assert.deepEqual(h.extract("key = "), []);
+        assert.deepEqual(h.extractRaw("key = "), []);
     });
 
     it("returns empty array for empty input", () => {
-        assert.deepEqual(h.extract(""), []);
+        assert.deepEqual(h.extractRaw(""), []);
     });
 });
