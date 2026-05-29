@@ -1,5 +1,14 @@
-import { BaseHandler } from "@plurnk/plurnk-mimetypes";
-import type { MimeSymbol } from "@plurnk/plurnk-mimetypes";
+import {
+    BaseHandler,
+    queryJsonpathObject,
+    QueryParseFailureError,
+} from "@plurnk/plurnk-mimetypes";
+import type {
+    HandlerContent,
+    MimeSymbol,
+    QueryDialect,
+    QueryMatch,
+} from "@plurnk/plurnk-mimetypes";
 import { parse } from "smol-toml";
 
 // application/toml + text/toml handler. Validates via smol-toml (zero deps,
@@ -27,6 +36,34 @@ export default class ApplicationToml extends BaseHandler {
         const validKeys = collectKeys(parsed);
         if (validKeys.size === 0) return [];
         return scanKeyLines(content, validKeys);
+    }
+
+    // Override jsonpath dispatch to query the parsed TOML value. smol-toml
+    // doesn't expose CST positions, so the `line` on every match defaults to
+    // 1 — the matched value carries the real signal; consumers wanting line
+    // anchoring can fall back to regex against the raw source.
+    override async query(
+        content: HandlerContent,
+        dialect: QueryDialect,
+        pattern: string,
+        flags?: string,
+    ): Promise<QueryMatch[]> {
+        if (dialect === "jsonpath") {
+            if (typeof content !== "string") {
+                throw new QueryParseFailureError({
+                    mimetype: this.mimetype,
+                    cause: new TypeError(`${this.mimetype} content must be a string`),
+                });
+            }
+            let parsed: unknown;
+            try {
+                parsed = parse(content);
+            } catch (cause) {
+                throw new QueryParseFailureError({ mimetype: this.mimetype, cause });
+            }
+            return queryJsonpathObject(parsed, pattern);
+        }
+        return super.query(content, dialect, pattern, flags);
     }
 }
 

@@ -97,3 +97,42 @@ describe("ApplicationToml", () => {
         assert.deepEqual(h.extractRaw(""), []);
     });
 });
+
+describe("ApplicationToml — query (jsonpath against parsed TOML)", () => {
+    const src = [
+        'version = "0.6.0"',
+        "",
+        "[users.alice]",
+        'role = "admin"',
+        "",
+        "[users.bob]",
+        'role = "user"',
+    ].join("\n");
+
+    it("queries the parsed value directly", async () => {
+        const out = await h.query(src, "jsonpath", "$.users.alice.role");
+        assert.equal(out.length, 1);
+        assert.equal(out[0].matched, "admin");
+    });
+
+    it("returns lines defaulting to 1 (smol-toml has no position tracking)", async () => {
+        const out = await h.query(src, "jsonpath", "$.version");
+        assert.equal(out.length, 1);
+        assert.equal(out[0].matched, "0.6.0");
+        assert.equal(out[0].line, 1);
+    });
+
+    it("throws QueryParseFailureError on malformed TOML", async () => {
+        await assert.rejects(
+            async () => { await h.query("key = ", "jsonpath", "$.x"); },
+            (err: unknown) => err instanceof Error && err.name === "QueryParseFailureError",
+        );
+    });
+
+    it("inherits regex against the raw TOML source (positions available there)", async () => {
+        const out = await h.query(src, "regex", "role = \"(\\w+)\"");
+        assert.equal(out.length, 2);
+        assert.deepEqual(out[0].matched, ["admin"]);
+        assert.equal(out[0].line, 4);
+    });
+});
